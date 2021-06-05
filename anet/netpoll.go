@@ -2,6 +2,7 @@ package anet
 
 import (
 	"errors"
+	"sync/atomic"
 	"unsafe"
 )
 
@@ -52,6 +53,7 @@ type EventLoopApi struct {
 	api PollInterface
 	Events []Event
 	FiredEvent []FiredEvent
+	St int32 //是否停止的标记
 }
 
 func GetEventApi(size int) (*EventLoopApi, error) {
@@ -116,9 +118,11 @@ func (p *EventLoopApi) DeleteEvent(fd int, event uint8) {
 
 func (p *EventLoopApi) Loop() error {
 	for {
+		if atomic.LoadInt32(&p.St) == int32(1) {
+			break
+		}
 		n, err := p.api.Loop(p, nil)
 		if err != nil {
-			panic(err)
 			return err
 		}
 		for i := 0; i < n; i++ {
@@ -134,6 +138,13 @@ func (p *EventLoopApi) Loop() error {
 	}
 	return nil
 }
+
+func (p *EventLoopApi) Stop() {
+	atomic.StoreInt32(&p.St, int32(1))
+}
+
+
+
 
 
 

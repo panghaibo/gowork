@@ -18,16 +18,15 @@ func readQueryFromClient(fd int, event uint8, private unsafe.Pointer) {
     client := (*Client)(private)
     _, err := syscall.Read(fd, client.RBuffer[:])
     if err != nil {
-    	if err == syscall.EINTR {
+    	if err == syscall.EINTR || err == syscall.EWOULDBLOCK {
     		return
 		}
 		syscall.Close(fd)
 	}
-	copy(client.WBuffer[:], client.RBuffer)
-	syscall.Write(fd, client.WBuffer)
+    syscall.Write(fd, []byte("alice"))
 }
 
-func CreateClient(fd int, pollApi *EventLoopApi) {
+func CreateClient(fd int) {
 	client := new(Client)
 	client.Fd = fd
 	client.RBuffer = make([]byte, 8096)
@@ -39,7 +38,7 @@ func CreateClient(fd int, pollApi *EventLoopApi) {
 		return
 	}
 
-	err := pollApi.AddEvent(fd, READ_EVENT, readQueryFromClient, nil, unsafe.Pointer(client))
+	err := MainPollApi.AddEvent(fd, READ_EVENT, readQueryFromClient, nil, unsafe.Pointer(client))
 	if err != nil {
 		syscall.Close(fd)
 		return
@@ -80,13 +79,13 @@ func GeneralAccept(sfd int, event uint8, private unsafe.Pointer) {
 	for frequency > 0 {
 		fd, _, err := syscall.Accept(sfd)
 		if err != nil {
-			if err == syscall.EINTR || err == syscall.EAGAIN {
+			if err == syscall.EINTR || err == syscall.EAGAIN || err == syscall.EWOULDBLOCK {
 				break
 			} else {
 				panic(err)
 			}
 		}
-		CreateClient(fd, (*EventLoopApi)(private))
+		CreateClient(fd)
 		frequency--
 	}
 }

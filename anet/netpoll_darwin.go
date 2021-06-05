@@ -95,7 +95,15 @@ func (p *NetPollApi) Loop(eventLoopApi *EventLoopApi, msec *int) (int, error) {
 
 	err := syscall.Select(eventLoopApi.MaxFd+1, &r, &w, nil, timeout)
     if err != nil {
-    	return firedEventNumber, err
+    	//注意 系统信号对系统调用的影响
+		if er, ok := err.(syscall.Errno); ok {
+			if er.Temporary() || er.Timeout() {
+				return 0, nil
+			}
+		} else {
+			//不可恢复的系统错误,记录系统日志
+			panic(err)
+		}
 	}
 	for i := 0; i <= eventLoopApi.MaxFd; i++ {
 		var event uint8

@@ -69,13 +69,17 @@ func (p *NetPollApi) Loop(eventLoopApi *EventLoopApi, msec *int) (int, error) {
 	if msec != nil {
 		mseconds = *msec
 	}
-	REDO:
 	n, err := syscall.EpollWait(p.eFd, p.Events, mseconds)
     if err != nil {
-    	if err == syscall.EINTR {
-    		goto REDO
+		//注意 系统信号对系统调用的影响
+		if er, ok := err.(syscall.Errno); ok {
+			if er.Temporary() || er.Timeout() {
+				return 0, nil
+			}
+		} else {
+			//不可恢复的系统错误,记录系统日志
+			panic(err)
 		}
-    	return n, err
 	}
 	for i:=0; i < n; i++ {
 		ev := p.Events[i]
@@ -104,5 +108,5 @@ func (p *NetPollApi) Close() {
 
 
 func (p *NetPollApi) GetApiName() string {
-	return "ePoll"
+	return "epoll"
 }
