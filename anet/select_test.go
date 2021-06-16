@@ -3,7 +3,8 @@
 package anet
 
 import (
-	anetx "github.com/haibo/assem/anet"
+	"fmt"
+	anetx "github.com/panghaibo/gowork/anet"
 	"syscall"
 	"testing"
 )
@@ -38,4 +39,14 @@ func TestSelectPoll(t *testing.T) {
 		t.Fatal(err)
 	}
 	api.DeleteEvent(syscall.Stdin, anetx.READ_EVENT)
+}
+
+var name map[string]int
+
+func TestNi(t *testing.T) {
+   buf := make([]byte, 0, 10)
+   buf = append(buf, "alice"...)
+   fmt.Println(len(buf), cap(buf))
+   buf = buf[0:0]
+	fmt.Println(len(buf), cap(buf))
 }

@@ -139,6 +139,7 @@ func (p *EventLoopApi) Loop() error {
 	return nil
 }
 
+//stop event loop
 func (p *EventLoopApi) Stop() {
 	atomic.StoreInt32(&p.St, int32(1))
 }

@@ -92,7 +92,6 @@ func (p *NetPollApi) Loop(eventLoopApi *EventLoopApi, msec *int) (int, error) {
 			Usec: int32(((*msec)%1000) * 1000),
 		}
 	}
-
 	err := syscall.Select(eventLoopApi.MaxFd+1, &r, &w, nil, timeout)
     if err != nil {
     	//注意 系统信号对系统调用的影响

@@ -5,9 +5,8 @@
 package main
 
 import (
-	"github.com/haibo/gowork/anet"
+	"gowork/anet"
 )
-
 
 func main() {
     sfd, err := anet.CreateTcpServer("127.0.0.1", 3000, 128)
